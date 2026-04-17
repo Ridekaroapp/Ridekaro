@@ -68,7 +68,8 @@
       Confirm Booking
     </button>
   </form>
-</section>
+</section><h2 style="text-align:center;">My Rides</h2>
+<div id="ridesList" style="max-width:600px;margin:auto;"></div>
 <section class="hero">
   <h2>Book Bike Taxi in Seconds</h2>
   <p>Fast • Safe • Affordable rides in your city</p>
@@ -116,6 +117,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.0/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/12.2.0/firebase-auth.js";
 import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/12.2.0/firebase-firestore.js";
+import { getDocs, query, where } from "https://www.gstatic.com/firebasejs/12.2.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDq8djWCKZCx9a0evT8n85vYZt8srcxH8o",
@@ -161,6 +163,7 @@ window.login = async function () {
   try {
     await signInWithEmailAndPassword(auth, email, password);
     alert("Login successful");
+    loadRides();
   } catch (err) {
     alert(err.message);
   }
@@ -187,9 +190,32 @@ window.bookRide = async function () {
     });
 
     alert("Ride booked successfully 🚗");
+    loadRides();
   } catch (err) {
     alert(err.message);
   }
+};window.loadRides = async function () {
+  const user = auth.currentUser;
+
+  if (!user) return;
+
+  const q = query(collection(db, "rides"), where("user", "==", user.email));
+  const querySnapshot = await getDocs(q);
+
+  let html = "";
+
+  querySnapshot.forEach((doc) => {
+    const data = doc.data();
+
+    html += `
+      <div style="background:white;padding:15px;margin:10px 0;border-radius:10px;">
+        🚗 ${data.pickup} → ${data.drop}<br>
+        📦 ${data.rideType}
+      </div>
+    `;
+  });
+
+  document.getElementById("ridesList").innerHTML = html;
 };
 </script></body>
 </html>

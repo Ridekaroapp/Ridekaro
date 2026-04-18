@@ -134,11 +134,10 @@ const firebaseConfig = {
   appId: "1:805660027682:web:0117b81f4ec8d341e5d37b",
   measurementId: "G-NWM50DX01P"
 };
-
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.2.0/firebase-auth.js";
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
-  import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.2.0/firebase-auth.js";
-
+ 
 onAuthStateChanged(auth, (user) => {
   if (user) {
     console.log("User logged in:", user.email);

@@ -7,65 +7,24 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <title>Ridekaro</title>
-
-<!-- CHANGE THIS TO YOUR LOGO FILE NAME -->
 <link rel="icon" href="logo.png">
 
 <style>
-body{
-font-family:sans-serif;
-margin:0;
-background:#fff;
-}
-
-.header{
-background:#f4c430;
-text-align:center;
-padding:15px;
-}
-
-.header img{
-height:60px;
-display:block;
-margin:auto;
-}
-
-.header h2{
-margin:5px;
-}
-
-.container{
-padding:20px;
-}
-
-input,button,select{
-padding:12px;
-margin:5px 0;
-width:100%;
-font-size:16px;
-}
-
-button{
-background:#f4c430;
-border:none;
-cursor:pointer;
-}
-
-#map{
-height:300px;
-margin-top:10px;
-}
+body{font-family:sans-serif;margin:0;background:#fff;}
+.header{background:#f4c430;text-align:center;padding:15px;}
+.header img{height:60px;display:block;margin:auto;}
+.header h2{margin:5px;}
+.container{padding:20px;}
+input,button,select{padding:12px;margin:5px 0;width:100%;font-size:16px;}
+button{background:#f4c430;border:none;cursor:pointer;}
+#map{height:300px;margin-top:10px;}
 </style>
 </head>
 
 <body>
 
-<!-- HEADER -->
 <div class="header">
-
-<!-- PUT YOUR LOGO FILE NAME HERE -->
 <img src="logo.png">
-
 <h2>Ridekaro</h2>
 
 <a href="https://wa.me/917051768470">
@@ -73,27 +32,19 @@ margin-top:10px;
 Book on WhatsApp
 </button>
 </a>
-
 </div>
 
 <div class="container">
-
 <h3>Login / Signup</h3>
-
 <input id="email" placeholder="Email">
 <input id="password" type="password" placeholder="Password">
-
 <button onclick="signup()">Signup</button>
 <button onclick="login()">Login</button>
-
 </div>
 
 <div class="container">
-
 <h3>Book Ride</h3>
-
 <div id="map"></div>
-
 <input id="pickup" placeholder="Pickup">
 <input id="drop" placeholder="Drop">
 
@@ -104,9 +55,7 @@ Book on WhatsApp
 </select>
 
 <button onclick="bookRide()">Confirm Booking</button>
-
 <p id="fare">Estimated Fare: ₹0</p>
-
 </div>
 
 <div class="container">
@@ -117,6 +66,9 @@ Book on WhatsApp
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+
+<!-- ✅ ADDED: EmailJS -->
+<script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
 
 <script>
 
@@ -144,18 +96,14 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png')
 navigator.geolocation.getCurrentPosition(pos=>{
 pickupLat=pos.coords.latitude;
 pickupLng=pos.coords.longitude;
-
 map.setView([pickupLat,pickupLng],15);
-
 L.marker([pickupLat,pickupLng]).addTo(map);
 });
 
 map.on('click',e=>{
 dropLat=e.latlng.lat;
 dropLng=e.latlng.lng;
-
 L.marker([dropLat,dropLng]).addTo(map);
-
 calculateFare();
 });
 
@@ -188,19 +136,13 @@ document.getElementById("fare").innerHTML =
 }
 
 function signup(){
-auth.createUserWithEmailAndPassword(
-email.value,
-password.value
-)
+auth.createUserWithEmailAndPassword(email.value,password.value)
 .then(()=>alert("Signup success"))
 .catch(e=>alert(e.message));
 }
 
 function login(){
-auth.signInWithEmailAndPassword(
-email.value,
-password.value
-)
+auth.signInWithEmailAndPassword(email.value,password.value)
 .then(()=>{
 alert("Login success");
 loadRides();
@@ -224,10 +166,36 @@ time:new Date()
 })
 .then(()=>{
 alert("Ride Booked");
+
+<!-- ✅ ADDED EMAIL CALL -->
+sendEmail({
+pickup:pickup.value,
+drop:drop.value,
+user:auth.currentUser.email,
+fare:document.getElementById("fare").innerText
+});
+
 loadRides();
 });
 
 }
+
+<!-- ✅ ADDED EMAIL FUNCTION -->
+function sendEmail(data){
+emailjs.send("service_a20rsus","template_xot7epe",{
+user: data.user,
+pickup: data.pickup,
+drop: data.drop,
+fare: data.fare
+})
+.then(()=>console.log("Email sent"))
+.catch(e=>console.log(e));
+}
+
+<!-- ✅ ADDED INIT -->
+(function(){
+emailjs.init("szp9VSLWIoqh_DW6P");
+})();
 
 function loadRides(){
 

@@ -3,15 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>Ridekaro</title>
+<title>Ridekaro Final</title>
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <style>
-body { font-family: Arial; margin:0; text-align:center; }
-#map { height: 400px; width:100%; margin-top:20px; }
+body { font-family: Arial; text-align:center; margin:0; }
+#map { height:400px; width:100%; }
 input, button { padding:10px; margin:5px; width:90%; max-width:400px; }
 </style>
 </head>
@@ -19,20 +18,18 @@ input, button { padding:10px; margin:5px; width:90%; max-width:400px; }
 <body>
 
 <h2>Login / Signup</h2>
-
-<input type="email" id="email" placeholder="Email">
-<input type="password" id="password" placeholder="Password">
-
+<input id="email" placeholder="Email">
+<input id="password" placeholder="Password">
 <button onclick="signup()">Signup</button>
 <button onclick="login()">Login</button>
 
 <h2>Book Ride</h2>
-
 <div id="map"></div>
 
 <input id="pickup" placeholder="Pickup">
 <input id="drop" placeholder="Drop">
 
+<button onclick="findRoute()">Calculate Route</button>
 <button onclick="bookRide()">Book Ride</button>
 
 <p id="fare">Estimated Fare: ₹0</p>
@@ -42,197 +39,140 @@ input, button { padding:10px; margin:5px; width:90%; max-width:400px; }
 
 <script type="module">
 
+// 🔥 Firebase
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.0/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.2.0/firebase-auth.js";
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/12.2.0/firebase-auth.js";
 import { getFirestore, collection, addDoc, getDocs, query, where } from "https://www.gstatic.com/firebasejs/12.2.0/firebase-firestore.js";
 
-// 🔥 Firebase Config (your real one)
 const firebaseConfig = {
   apiKey: "AIzaSyDq8djWCKZCx9a0evT8n85vYZt8srcxH8o",
   authDomain: "ridekaro-2237b.firebaseapp.com",
-  projectId: "ridekaro-2237b",
-  storageBucket: "ridekaro-2237b.firebasestorage.app",
-  messagingSenderId: "805660027682",
-  appId: "1:805660027682:web:0117b81f4ec8d341e5d37b"
+  projectId: "ridekaro-2237b"
 };
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// 🔐 Auth state
-onAuthStateChanged(auth, (user) => {
-  console.log(user ? "Logged in" : "Not logged in");
+// 🔐 AUTH
+window.signup = async ()=>{
+  try{
+    await createUserWithEmailAndPassword(auth,email.value,password.value);
+    alert("Signup success");
+  }catch(e){ alert(e.message); }
+};
+
+window.login = async ()=>{
+  try{
+    await signInWithEmailAndPassword(auth,email.value,password.value);
+    alert("Login success");
+    loadRides();
+  }catch(e){ alert(e.message); }
+};
+
+// 🌍 MAP
+let map = L.map('map').setView([20.5937,78.9629],5);
+
+L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{
+  maxZoom:19
+}).addTo(map);
+
+let pickupLat, pickupLng, dropLat, dropLng;
+let routeLayer;
+
+// 📍 Current Location
+navigator.geolocation.getCurrentPosition(pos=>{
+  pickupLat = pos.coords.latitude;
+  pickupLng = pos.coords.longitude;
+
+  map.setView([pickupLat,pickupLng],14);
+
+  L.marker([pickupLat,pickupLng]).addTo(map)
+    .bindPopup("📍 You are here").openPopup();
+
+  pickup.value="Current Location";
 });
 
-// 🔐 Signup
-window.signup = async () => {
-  const email = document.getElementById("email").value;
-  const password = document.getElementById("password").value;
+// 🔍 GEOCODE
+async function geocode(place){
+  let res = await fetch(https://nominatim.openstreetmap.org/search?format=json&q=${place});
+  let data = await res.json();
+  if(!data.length){ alert("Location not found"); return null; }
+  return [parseFloat(data[0].lat), parseFloat(data[0].lon)];
+}
 
-  try {
-    await createUserWithEmailAndPassword(auth, email, password);
-    alert("Signup successful");
-  } catch (e) {
-    alert(e.message);
+// 🚗 ROUTE
+async function getRoute(lat1,lng1,lat2,lng2){
+  let url = https://router.project-osrm.org/route/v1/driving/${lng1},${lat1};${lng2},${lat2}?overview=full&geometries=geojson;
+  let res = await fetch(url);
+  let data = await res.json();
+  return data.routes[0];
+}
+
+// 🚀 CALCULATE ROUTE + FARE
+window.findRoute = async ()=>{
+
+  if(pickup.value !== "Current Location"){
+    let p = await geocode(pickup.value);
+    if(!p) return;
+    [pickupLat,pickupLng] = p;
   }
+
+  let d = await geocode(drop.value);
+  if(!d) return;
+  [dropLat,dropLng] = d;
+
+  let route = await getRoute(pickupLat,pickupLng,dropLat,dropLng);
+
+  let coords = route.geometry.coordinates.map(c=>[c[1],c[0]]);
+
+  if(routeLayer) map.removeLayer(routeLayer);
+
+  routeLayer = L.polyline(coords,{color:'blue'}).addTo(map);
+  map.fitBounds(routeLayer.getBounds());
+
+  let distance = route.distance/1000;
+  let fare = 30 + distance*10;
+
+  fareText = "Distance: "+distance.toFixed(2)+" km | Fare: ₹"+Math.round(fare);
+  document.getElementById("fare").innerText = fareText;
 };
 
-// 🔐 Login
-window.login = async () => {
-  const email = document.getElementById("email").value;
-  const password = document.getElementById("password").value;
+// 📦 BOOK RIDE
+window.bookRide = async ()=>{
 
-  try {
-    await signInWithEmailAndPassword(auth, email, password);
-    alert("Login successful");
-    loadRides();
-  } catch (e) {
-    alert(e.message);
-  }
-};
-
-// 🚗 Book Ride (FIXED VALIDATION)
-window.bookRide = async () => {
-  if (!auth.currentUser) return alert("Login first");
-
-  if (!pickupLat || !dropLat) {
-    alert("Please select pickup and drop on map");
+  if(!auth.currentUser){
+    alert("Login first");
     return;
   }
 
-  try {
-    await addDoc(collection(db, "rides"), {
-      pickup: document.getElementById("pickup").value,
-      drop: document.getElementById("drop").value,
-      user: auth.currentUser.email,
-      time: new Date()
-    });
-
-    alert("Ride booked");
-    loadRides();
-  } catch (e) {
-    alert(e.message);
+  if(!dropLat){
+    alert("Calculate route first");
+    return;
   }
+
+  await addDoc(collection(db,"rides"),{
+    pickup: pickup.value,
+    drop: drop.value,
+    user: auth.currentUser.email,
+    time: new Date()
+  });
+
+  alert("Ride booked 🚗");
+  loadRides();
 };
 
-// 📄 Load rides
-async function loadRides() {
-  const q = query(collection(db, "rides"), where("user","==",auth.currentUser.email));
-  const snap = await getDocs(q);
+// 📄 LOAD RIDES
+async function loadRides(){
+  let q=query(collection(db,"rides"),where("user","==",auth.currentUser.email));
+  let snap=await getDocs(q);
 
-  let html = "";
+  ridesList.innerHTML="";
   snap.forEach(doc=>{
-    const d = doc.data();
-    html += <p>${d.pickup} → ${d.drop}</p>;
+    let d=doc.data();
+    ridesList.innerHTML += <p>🚗 ${d.pickup} → ${d.drop}</p>;
   });
-
-  document.getElementById("ridesList").innerHTML = html;
 }
-
-// 🌍 MAP VARIABLES
-let map;
-let pickupLat=null, pickupLng=null, dropLat=null, dropLng=null;
-let pickupMarker, dropMarker;
-
-// 📏 Distance function
-function getDistance(lat1, lon1, lat2, lon2){
-  const R=6371;
-  const dLat=(lat2-lat1)*Math.PI/180;
-  const dLon=(lon2-lon1)*Math.PI/180;
-  const a=Math.sin(dLat/2)**2 +
-    Math.cos(lat1*Math.PI/180)Math.cos(lat2*Math.PI/180)
-    Math.sin(dLon/2)**2;
-  return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
-}
-
-// 💰 Fare calculation
-window.calculateFare = ()=>{
-  if(pickupLat==null||dropLat==null) return;
-  let d = getDistance(pickupLat,pickupLng,dropLat,dropLng);
-  document.getElementById("fare").innerText =
-    "Estimated Fare: ₹" + Math.round(30 + d*10);
-};
-
-// 🚀 Init Map
-window.addEventListener("DOMContentLoaded", ()=>{
-
-  map = L.map('map').setView([20.5937,78.9629],5);
-
-  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{
-    maxZoom:19
-  }).addTo(map);
-
-  // 📍 CURRENT LOCATION (FIXED ERROR HANDLING)
-  if (navigator.geolocation) {
-    navigator.geolocation.getCurrentPosition(
-      pos => {
-        const lat=pos.coords.latitude;
-        const lng=pos.coords.longitude;
-
-        map.setView([lat,lng],14);
-
-        L.marker([lat,lng]).addTo(map)
-          .bindPopup("📍 You are here");
-
-        pickupLat=lat;
-        pickupLng=lng;
-
-        document.getElementById("pickup").value="Current Location";
-      },
-      err => {
-        alert("Location not allowed. Select pickup manually.");
-      }
-    );
-  }
-
-  // 📌 Click logic
-  map.on("click", e=>{
-    let lat=e.latlng.lat, lng=e.latlng.lng;
-
-    // Pickup
-    if(pickupLat==null){
-      pickupLat=lat; pickupLng=lng;
-
-      if(pickupMarker) map.removeLayer(pickupMarker);
-      pickupMarker=L.marker([lat,lng]).addTo(map)
-        .bindPopup("📍 Pickup");
-
-      document.getElementById("pickup").value=lat+","+lng;
-    }
-
-    // Drop
-    else if(dropLat==null){
-      dropLat=lat; dropLng=lng;
-
-      if(dropMarker) map.removeLayer(dropMarker);
-      dropMarker=L.marker([lat,lng]).addTo(map)
-        .bindPopup("📍 Drop");
-
-      document.getElementById("drop").value=lat+","+lng;
-
-      calculateFare();
-    }
-
-    // Reset
-    else{
-      pickupLat=lat; pickupLng=lng;
-      dropLat=null; dropLng=null;
-
-      map.eachLayer(l=>{
-        if(l instanceof L.Marker) map.removeLayer(l);
-      });
-
-      pickupMarker=L.marker([lat,lng]).addTo(map)
-        .bindPopup("📍 Pickup");
-
-      document.getElementById("pickup").value=lat+","+lng;
-      document.getElementById("drop").value="";
-      document.getElementById("fare").innerText="Estimated Fare: ₹0";
-    }
-  });
-
-});
 
 </script>
 </body>

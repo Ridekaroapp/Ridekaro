@@ -119,6 +119,7 @@ border-radius:10px;
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 
 <script>
+
 const firebaseConfig = {
 apiKey: "AIzaSyDq8djWCKZCx9a0evT8n85vYZt8srcxH8o",
 authDomain: "ridekaro-2237b.firebaseapp.com",
@@ -133,9 +134,12 @@ firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 
+let map;
 let pickupLat, pickupLng, dropLat, dropLng;
 
-const map = L.map('map').setView([28.6139,77.2090], 12);
+window.onload = function(){
+
+map = L.map('map').setView([28.6139,77.2090], 12);
 
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png')
 .addTo(map);
@@ -151,18 +155,25 @@ L.marker([pickupLat,pickupLng]).addTo(map);
 map.on('click',e=>{
 dropLat=e.latlng.lat;
 dropLng=e.latlng.lng;
-
 L.marker([dropLat,dropLng]).addTo(map);
 });
 
+};
+
 function signup(){
-auth.createUserWithEmailAndPassword(email.value,password.value)
+auth.createUserWithEmailAndPassword(
+email.value,
+password.value
+)
 .then(()=>alert("Signup success"))
 .catch(e=>alert(e.message));
 }
 
 function login(){
-auth.signInWithEmailAndPassword(email.value,password.value)
+auth.signInWithEmailAndPassword(
+email.value,
+password.value
+)
 .then(()=>{
 alert("Login success");
 loadRides();
@@ -173,6 +184,7 @@ loadRider();
 }
 
 function bookRide(){
+
 if(!auth.currentUser){
 alert("Login first");
 return;
@@ -186,7 +198,8 @@ user:auth.currentUser.email,
 status:"pending",
 rider:null,
 time:new Date()
-}).then(()=>{
+})
+.then(()=>{
 alert("Ride booked");
 loadRides();
 loadAdmin();
@@ -194,27 +207,44 @@ loadAdmin();
 }
 
 function loadRides(){
+
+if(!auth.currentUser) return;
+
 db.collection("rides")
 .where("user","==",auth.currentUser.email)
 .get()
 .then(snap=>{
+
 let html="";
+
 snap.forEach(doc=>{
 let d=doc.data();
-html += <div>🚗 ${d.pickup} → ${d.drop} (${d.status})</div>;
+
+html += `
+<div>
+🚗 ${d.pickup} → ${d.drop} (${d.status})
+</div>
+`;
 });
+
 ridesList.innerHTML=html;
+
 });
+
 }
 
 function loadAdmin(){
+
 db.collection("rides")
 .where("status","==","pending")
 .get()
 .then(snap=>{
+
 let html="";
+
 snap.forEach(doc=>{
 let d=doc.data();
+
 html+=`
 <div>
 ${d.pickup} → ${d.drop}
@@ -224,8 +254,11 @@ ${d.pickup} → ${d.drop}
 </div>
 `;
 });
+
 adminRides.innerHTML=html;
+
 });
+
 }
 
 function assign(id,rider){
@@ -237,15 +270,19 @@ loadAdmin();
 }
 
 function loadRider(){
+
 if(!auth.currentUser) return;
 
 db.collection("rides")
 .where("rider","==",auth.currentUser.email)
 .get()
 .then(snap=>{
+
 let html="";
+
 snap.forEach(doc=>{
 let d=doc.data();
+
 html+=`
 <div>
 ${d.pickup} → ${d.drop}
@@ -255,19 +292,27 @@ ${d.pickup} → ${d.drop}
 </div>
 `;
 });
+
 riderRides.innerHTML=html;
+
 });
+
 }
 
 function accept(id){
-db.collection("rides").doc(id).update({status:"accepted"});
+db.collection("rides").doc(id).update({
+status:"accepted"
+});
 loadRider();
 }
 
 function reject(id){
-db.collection("rides").doc(id).update({status:"rejected"});
+db.collection("rides").doc(id).update({
+status:"rejected"
+});
 loadRider();
 }
+
 </script>
 
 </body>

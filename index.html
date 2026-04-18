@@ -7,72 +7,77 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <title>Ridekaro</title>
-<link rel="icon" href="ridekaro-logo.png">
+
+<!-- CHANGE THIS TO YOUR LOGO FILE NAME -->
+<link rel="icon" href="logo.png">
 
 <style>
 body{
 font-family:sans-serif;
 margin:0;
-background:#fffdf5;
+background:#fff;
 }
 
 .header{
-background:#FFD600;
-padding:15px;
+background:#f4c430;
 text-align:center;
+padding:15px;
+}
+
+.header img{
+height:60px;
+display:block;
+margin:auto;
+}
+
+.header h2{
+margin:5px;
 }
 
 .container{
-background:white;
 padding:20px;
-margin:15px;
-border-radius:12px;
-box-shadow:0 2px 10px rgba(0,0,0,0.05);
 }
 
-input,select,button{
+input,button,select{
 padding:12px;
-margin:6px 0;
+margin:5px 0;
 width:100%;
 font-size:16px;
-border-radius:8px;
-border:1px solid #ddd;
 }
 
 button{
-background:#FFD600;
-font-weight:bold;
+background:#f4c430;
 border:none;
 cursor:pointer;
 }
 
-.whatsapp{
-background:#25D366;
-color:white;
-width:auto;
-}
-
 #map{
 height:300px;
-border-radius:10px;
+margin-top:10px;
 }
 </style>
 </head>
 
 <body>
 
+<!-- HEADER -->
 <div class="header">
-<img src="ridekaro-logo.png" height="60">
-<h2>Ridekaro</h2>
-</div>
 
-<div style="text-align:center;margin:10px;">
+<!-- PUT YOUR LOGO FILE NAME HERE -->
+<img src="logo.png">
+
+<h2>Ridekaro</h2>
+
 <a href="https://wa.me/917051768470">
-<button class="whatsapp">Book on WhatsApp</button>
+<button style="background:green;color:white;width:200px">
+Book on WhatsApp
+</button>
 </a>
+
 </div>
 
 <div class="container">
+
 <h3>Login / Signup</h3>
 
 <input id="email" placeholder="Email">
@@ -80,9 +85,11 @@ border-radius:10px;
 
 <button onclick="signup()">Signup</button>
 <button onclick="login()">Login</button>
+
 </div>
 
 <div class="container">
+
 <h3>Book Ride</h3>
 
 <div id="map"></div>
@@ -97,23 +104,16 @@ border-radius:10px;
 </select>
 
 <button onclick="bookRide()">Confirm Booking</button>
+
+<p id="fare">Estimated Fare: ₹0</p>
+
 </div>
 
 <div class="container">
-<h3>Your Rides</h3>
 <div id="ridesList"></div>
 </div>
 
-<div class="container">
-<h3>Admin Panel</h3>
-<div id="adminRides"></div>
-</div>
-
-<div class="container">
-<h3>Rider Panel</h3>
-<div id="riderRides"></div>
-</div>
-
+<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
@@ -134,12 +134,9 @@ firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-let map;
-let pickupLat, pickupLng, dropLat, dropLng;
+let pickupLat,pickupLng,dropLat,dropLng;
 
-window.onload = function(){
-
-map = L.map('map').setView([28.6139,77.2090], 12);
+const map = L.map('map').setView([28.6139,77.2090], 12);
 
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png')
 .addTo(map);
@@ -149,16 +146,46 @@ pickupLat=pos.coords.latitude;
 pickupLng=pos.coords.longitude;
 
 map.setView([pickupLat,pickupLng],15);
+
 L.marker([pickupLat,pickupLng]).addTo(map);
 });
 
 map.on('click',e=>{
 dropLat=e.latlng.lat;
 dropLng=e.latlng.lng;
+
 L.marker([dropLat,dropLng]).addTo(map);
+
+calculateFare();
 });
 
-};
+function getDistance(a,b,c,d){
+const R=6371;
+const dLat=(c-a)*Math.PI/180;
+const dLon=(d-b)*Math.PI/180;
+
+const x=
+Math.sin(dLat/2)*Math.sin(dLat/2)+
+Math.cos(a*Math.PI/180)*
+Math.cos(c*Math.PI/180)*
+Math.sin(dLon/2)*Math.sin(dLon/2);
+
+return R*(2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x)));
+}
+
+function calculateFare(){
+if(!pickupLat || !dropLat) return;
+
+let fare = 30 + getDistance(
+pickupLat,
+pickupLng,
+dropLat,
+dropLng
+)*10;
+
+document.getElementById("fare").innerHTML =
+"Estimated Fare: ₹"+Math.round(fare);
+}
 
 function signup(){
 auth.createUserWithEmailAndPassword(
@@ -177,8 +204,6 @@ password.value
 .then(()=>{
 alert("Login success");
 loadRides();
-loadAdmin();
-loadRider();
 })
 .catch(e=>alert(e.message));
 }
@@ -193,22 +218,18 @@ return;
 db.collection("rides").add({
 pickup:pickup.value,
 drop:drop.value,
-rideType:rideType.value,
 user:auth.currentUser.email,
-status:"pending",
-rider:null,
+fare:document.getElementById("fare").innerText,
 time:new Date()
 })
 .then(()=>{
-alert("Ride booked");
+alert("Ride Booked");
 loadRides();
-loadAdmin();
 });
+
 }
 
 function loadRides(){
-
-if(!auth.currentUser) return;
 
 db.collection("rides")
 .where("user","==",auth.currentUser.email)
@@ -220,97 +241,16 @@ let html="";
 snap.forEach(doc=>{
 let d=doc.data();
 
-html += `
-<div>
-🚗 ${d.pickup} → ${d.drop} (${d.status})
-</div>
-`;
+html += `<div>
+🚗 ${d.pickup} → ${d.drop} <br>
+💰 ${d.fare}
+</div><hr>`;
 });
 
-ridesList.innerHTML=html;
-
-});
-
-}
-
-function loadAdmin(){
-
-db.collection("rides")
-.where("status","==","pending")
-.get()
-.then(snap=>{
-
-let html="";
-
-snap.forEach(doc=>{
-let d=doc.data();
-
-html+=`
-<div>
-${d.pickup} → ${d.drop}
-<br>
-<button onclick="assign('${doc.id}','rider1@gmail.com')">Rider1</button>
-<button onclick="assign('${doc.id}','rider2@gmail.com')">Rider2</button>
-</div>
-`;
-});
-
-adminRides.innerHTML=html;
+ridesList.innerHTML = html;
 
 });
 
-}
-
-function assign(id,rider){
-db.collection("rides").doc(id).update({
-rider:rider,
-status:"assigned"
-});
-loadAdmin();
-}
-
-function loadRider(){
-
-if(!auth.currentUser) return;
-
-db.collection("rides")
-.where("rider","==",auth.currentUser.email)
-.get()
-.then(snap=>{
-
-let html="";
-
-snap.forEach(doc=>{
-let d=doc.data();
-
-html+=`
-<div>
-${d.pickup} → ${d.drop}
-<br>
-<button onclick="accept('${doc.id}')">Accept</button>
-<button onclick="reject('${doc.id}')">Reject</button>
-</div>
-`;
-});
-
-riderRides.innerHTML=html;
-
-});
-
-}
-
-function accept(id){
-db.collection("rides").doc(id).update({
-status:"accepted"
-});
-loadRider();
-}
-
-function reject(id){
-db.collection("rides").doc(id).update({
-status:"rejected"
-});
-loadRider();
 }
 
 </script>

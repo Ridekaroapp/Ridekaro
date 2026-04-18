@@ -242,64 +242,136 @@ window.bookRide = async function () {
 
   document.getElementById("ridesList").innerHTML = html;
 };
+  window.addEventListener("load", function () {
 
- window.calculateFare = function () {
+  let map = L.map('map').setView([32.3865, 75.5173], 10);
 
-  console.log("Fare triggered");
-
-  if (pickupLat === null || dropLat === null) {
-    console.log("Missing coordinates");
-    return;
-  }
-
-  let distance = getDistance(pickupLat, pickupLng, dropLat, dropLng);
-
-  let fare = 30 + (distance * 10);
-
-  document.getElementById("fare").innerText =
-    "Estimated Fare: ₹" + Math.round(fare);
-};
-window.addEventListener("load", function () {
-
-  console.log("MAP START");
-
-  var map = L.map('map').setView([32.3865, 75.5173], 10);
-
-  // ✅ VERY IMPORTANT (tile layer)
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  // 🌍 Map tiles
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19,
-    attribution: '© OpenStreetMap'
   }).addTo(map);
 
-});
+  let pickupLat = null, pickupLng = null;
+  let dropLat = null, dropLng = null;
 
+  let pickupMarker, dropMarker, userMarker;
+
+  // 📍 CURRENT LOCATION
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(function(pos) {
+
+      let lat = pos.coords.latitude;
+      let lng = pos.coords.longitude;
+
+      map.setView([lat, lng], 15);
+
+      userMarker = L.marker([lat, lng]).addTo(map)
+        .bindPopup("📍 You are here")
+        .openPopup();
+
+      // auto set pickup
+      pickupLat = lat;
+      pickupLng = lng;
+
+      document.getElementById("pickup").value = "Current Location";
+
+    });
+  }
+
+  // 📌 CLICK TO SELECT PICKUP & DROP
   map.on('click', function(e) {
 
     let lat = e.latlng.lat;
     let lng = e.latlng.lng;
 
+    // 🚕 PICKUP
     if (pickupLat === null) {
+
       pickupLat = lat;
       pickupLng = lng;
 
-      L.marker([lat, lng]).addTo(map)
+      if (pickupMarker) map.removeLayer(pickupMarker);
+
+      pickupMarker = L.marker([lat, lng]).addTo(map)
         .bindPopup("📍 Pickup")
         .openPopup();
+
+      document.getElementById("pickup").value = lat + ", " + lng;
+
     }
 
+    // 📦 DROP
     else if (dropLat === null) {
+
       dropLat = lat;
       dropLng = lng;
 
-      L.marker([lat, lng]).addTo(map)
+      if (dropMarker) map.removeLayer(dropMarker);
+
+      dropMarker = L.marker([lat, lng]).addTo(map)
         .bindPopup("📍 Drop")
         .openPopup();
 
-      calculateFare();
+      document.getElementById("drop").value = lat + ", " + lng;
+
+      calculateFare(); // calculate after drop
+
+    }
+
+    // 🔄 RESET if both already selected
+    else {
+      pickupLat = lat;
+      pickupLng = lng;
+      dropLat = null;
+      dropLng = null;
+
+      map.eachLayer(layer => {
+        if (layer instanceof L.Marker) map.removeLayer(layer);
+      });
+
+      pickupMarker = L.marker([lat, lng]).addTo(map)
+        .bindPopup("📍 Pickup")
+        .openPopup();
+
+      document.getElementById("pickup").value = lat + ", " + lng;
+      document.getElementById("drop").value = "";
+
+      document.getElementById("fare").innerText = "Estimated Fare: ₹0";
     }
 
   });
 
+  // 📏 DISTANCE FUNCTION
+  function getDistance(lat1, lon1, lat2, lon2) {
+    const R = 6371;
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+
+    const a =
+      Math.sin(dLat/2) * Math.sin(dLat/2) +
+      Math.cos(lat1 * Math.PI / 180) *
+      Math.cos(lat2 * Math.PI / 180) *
+      Math.sin(dLon/2) * Math.sin(dLon/2);
+
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+
+    return R * c;
+  }
+
+  // 💰 FARE CALCULATION
+  window.calculateFare = function () {
+
+    if (pickupLat === null || dropLat === null) return;
+
+    let distance = getDistance(pickupLat, pickupLng, dropLat, dropLng);
+
+    let fare = 30 + (distance * 10); // base ₹30 + ₹10/km
+
+    document.getElementById("fare").innerText =
+      "Estimated Fare: ₹" + Math.round(fare);
+  };
+
 });
+
 </script></body>
 </html>

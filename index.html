@@ -259,31 +259,30 @@ window.bookRide = async function () {
   document.getElementById("fare").innerText =
     "Estimated Fare: ₹" + Math.round(fare);
 };
-window.addEventListener("load", function () {
+  window.addEventListener("load", function () {
 
   var map = L.map('map').setView([32.3865, 75.5173], 10);
+
+  // ✅ ADD THIS (missing in your code)
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+  }).addTo(map);
 
   map.on('click', function(e) {
 
     let lat = e.latlng.lat;
     let lng = e.latlng.lng;
 
-    // PICKUP
     if (pickupLat === null) {
-
       pickupLat = lat;
       pickupLng = lng;
 
       L.marker([lat, lng]).addTo(map)
         .bindPopup("📍 Pickup")
         .openPopup();
-
-      alert("Pickup selected");
     }
 
-    // DROP
     else if (dropLat === null) {
-
       dropLat = lat;
       dropLng = lng;
 
@@ -291,13 +290,11 @@ window.addEventListener("load", function () {
         .bindPopup("📍 Drop")
         .openPopup();
 
-      alert("Drop selected");
-
       calculateFare();
     }
 
-  }); // ✅ CLOSE map.on
+  });
 
-}); // ✅ CLOSE window load
+});
 </script></body>
 </html>

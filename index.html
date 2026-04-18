@@ -260,43 +260,64 @@ window.bookRide = async function () {
   document.getElementById("fare").innerText =
     "Estimated Fare: ₹" + Math.round(fare);
 };
-window.addEventListener("load", function () {
+  window.addEventListener("load", function () {
 
-  var map = L.map('map').setView([32.3865, 75.5173], 10);
-  map.on('click', function(e) {
+  var map = L.map('map');
 
-  let lat = e.latlng.lat;
-  let lng = e.latlng.lng;
+  let dropMarker;
 
-  // 🚕 PICKUP
-  if (pickupLat === null) {
+  // 🌍 LIVE LOCATION (Pickup)
+  navigator.geolocation.getCurrentPosition((position) => {
+    
+    let lat = position.coords.latitude;
+    let lng = position.coords.longitude;
 
+    map.setView([lat, lng], 15);
+
+    // 📍 Set Pickup
     pickupLat = lat;
     pickupLng = lng;
 
     L.marker([lat, lng]).addTo(map)
-      .bindPopup("📍 Pickup")
+      .bindPopup("📍 Pickup (Your Location)")
       .openPopup();
 
-    alert("Pickup selected");
-    console.log("Pickup:", pickupLat, pickupLng);
-  }
+  }, () => {
+    alert("Please allow location access");
 
-  // 📦 DROP
-  else if (dropLat === null) {
+    // 📍 Fallback location (if denied)
+    map.setView([28.6139, 77.2090], 10); // Delhi
+  });
+
+  // 🗺️ Map Tiles (VERY IMPORTANT)
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap contributors'
+  }).addTo(map);
+
+  // 📦 CLICK TO SET DROP LOCATION
+  map.on('click', function(e) {
+
+    let lat = e.latlng.lat;
+    let lng = e.latlng.lng;
 
     dropLat = lat;
     dropLng = lng;
 
-    L.marker([lat, lng]).addTo(map)
-      .bindPopup("📍 Drop")
+    // ❌ Remove old drop marker
+    if (dropMarker) {
+      map.removeLayer(dropMarker);
+    }
+
+    // ✅ Add new drop marker
+    dropMarker = L.marker([lat, lng]).addTo(map)
+      .bindPopup("📍 Drop Location")
       .openPopup();
 
-    alert("Drop selected");
     console.log("Drop:", dropLat, dropLng);
 
-    calculateFare(); // IMPORTANT
-  }
+    // 💰 Calculate fare
+    calculateFare();
+  });
 
 });
 </script></body>

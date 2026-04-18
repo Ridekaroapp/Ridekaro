@@ -147,6 +147,26 @@ onAuthStateChanged(auth, (user) => {
   }
 });
 const db = getFirestore(app);
+  let pickupLat = null;
+let pickupLng = null;
+let dropLat = null;
+let dropLng = null;
+    function getDistance(lat1, lon1, lat2, lon2) {
+  const R = 6371;
+
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+
+  const a =
+    Math.sin(dLat/2) * Math.sin(dLat/2) +
+    Math.cos(lat1 * Math.PI / 180) *
+    Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLon/2) * Math.sin(dLon/2);
+
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+
+  return R * c;
+}
 
 // SIGNUP
 window.signup = async function () {
@@ -222,21 +242,54 @@ window.bookRide = async function () {
   });
 
   document.getElementById("ridesList").innerHTML = html;
-};window.calculateFare = function () {
-  const pickup = document.getElementById("pickup").value;
-  const drop = document.getElementById("drop").value;
+};
 
-  if (!pickup || !drop) return;
+  window.calculateFare = function () {
 
-  let distance = Math.floor(Math.random() * 10) + 1;
+  if (!pickupLat || !dropLat) return;
+
+  let distance = getDistance(pickupLat, pickupLng, dropLat, dropLng);
+
   let fare = 30 + (distance * 10);
 
   document.getElementById("fare").innerText =
-    "Estimated Fare: ₹" + fare;
+    "Estimated Fare: ₹" + Math.round(fare);
 };
 window.addEventListener("load", function () {
 
   var map = L.map('map').setView([32.3865, 75.5173], 10);
+  map.on('click', function(e) {
+
+  let lat = e.latlng.lat;
+  let lng = e.latlng.lng;
+
+  // FIRST CLICK = PICKUP
+  if (!pickupLat) {
+    pickupLat = lat;
+    pickupLng = lng;
+
+    L.marker([lat, lng]).addTo(map)
+      .bindPopup("📍 Pickup")
+      .openPopup();
+
+    alert("Pickup selected");
+  }
+
+  // SECOND CLICK = DROP
+  else {
+    dropLat = lat;
+    dropLng = lng;
+
+    L.marker([lat, lng]).addTo(map)
+      .bindPopup("📍 Drop")
+      .openPopup();
+
+    alert("Drop selected");
+
+    calculateFare();
+  }
+
+});
 
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: 'OpenStreetMap'

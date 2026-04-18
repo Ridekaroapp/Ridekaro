@@ -233,10 +233,8 @@ window.bookRide = async function () {
 
   document.getElementById("fare").innerText =
     "Estimated Fare: ₹" + fare;
-};window.calculateFare = function () {
-  ...
 };
-window.onload = function () {
+window.addEventListener("load", function () {
 
   var map = L.map('map').setView([32.3865, 75.5173], 10);
 
@@ -244,7 +242,6 @@ window.onload = function () {
     attribution: 'OpenStreetMap'
   }).addTo(map);
 
-  // 📍 LIVE GPS LOCATION
   if (navigator.geolocation) {
     navigator.geolocation.getCurrentPosition(function (position) {
 
@@ -257,12 +254,11 @@ window.onload = function () {
         .bindPopup("📍 You are here")
         .openPopup();
 
-    }, function () {
-      alert("Location access denied");
     });
   }
 
-};
+});
+      
 
  
 </script></body>

@@ -2,117 +2,151 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+  <title>Ridekaro</title>
 
   <!-- Leaflet -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
-  <title>Ridekaro - Premium</title>
 
   <style>
     body { margin:0; font-family:sans-serif; }
+    header { background:#111; color:white; padding:15px; text-align:center; }
     #map { height:300px; width:100%; }
+    input, button, select {
+      width:100%; padding:10px; margin:8px 0;
+    }
+    button { background:red; color:white; border:none; }
   </style>
 </head>
 
 <body>
 
-<h2 style="text-align:center;">Book Your Ride</h2>
+<!-- HEADER -->
+<header>
+  <img src="logo.png" width="120"><br>
+  <h2>Ridekaro</h2>
+</header>
 
-<div id="map"></div>
+<!-- LOGIN -->
+<div style="padding:20px;">
+  <h3>Login / Signup</h3>
 
-<div style="max-width:400px;margin:auto;padding:20px;">
-  <input type="text" id="pickup" placeholder="Pickup"><br><br>
-  <input type="text" id="drop" placeholder="Drop"><br><br>
+  <input type="email" id="email" placeholder="Email">
+  <input type="password" id="password" placeholder="Password">
+
+  <button onclick="signup()">Signup</button>
+  <button onclick="login()">Login</button>
+</div>
+
+<!-- MAP + BOOK -->
+<div style="padding:20px;">
+  <h3>Book Ride</h3>
+
+  <div id="map"></div>
+
+  <input id="pickup" placeholder="Pickup">
+  <input id="drop" placeholder="Drop">
+
+  <select id="rideType">
+    <option>Bike Taxi</option>
+    <option>Parcel</option>
+  </select>
 
   <button onclick="bookRide()">Confirm Booking</button>
 
   <p id="fare">Estimated Fare: ₹0</p>
 </div>
 
-<script>
-let pickupLat = null;
-let pickupLng = null;
-let dropLat = null;
-let dropLng = null;
+<!-- RIDES -->
+<div id="ridesList"></div>
 
-// 📏 Distance
-function getDistance(lat1, lon1, lat2, lon2) {
-  const R = 6371;
-  const dLat = (lat2 - lat1) * Math.PI / 180;
-  const dLon = (lon2 - lon1) * Math.PI / 180;
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.0/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/12.2.0/firebase-auth.js";
+import { getFirestore, collection, addDoc, getDocs, query, where } from "https://www.gstatic.com/firebasejs/12.2.0/firebase-firestore.js";
 
-  const a =
-    Math.sin(dLat/2)**2 +
-    Math.cos(lat1*Math.PI/180) *
-    Math.cos(lat2*Math.PI/180) *
-    Math.sin(dLon/2)**2;
+const firebaseConfig = {
+  apiKey: "YOUR_KEY",
+  authDomain: "YOUR_DOMAIN",
+  projectId: "YOUR_ID"
+};
 
-  return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)));
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+// VARIABLES
+let pickupLat=null, pickupLng=null, dropLat=null, dropLng=null;
+
+// DISTANCE
+function getDistance(a,b,c,d){
+  const R=6371;
+  const dLat=(c-a)*Math.PI/180;
+  const dLon=(d-b)*Math.PI/180;
+  const x=Math.sin(dLat/2)**2+
+    Math.cos(a*Math.PI/180)*Math.cos(c*Math.PI/180)*Math.sin(dLon/2)**2;
+  return R*(2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x)));
 }
 
-// 💰 Fare
-function calculateFare() {
-  if (!pickupLat || !dropLat) return;
-
-  let distance = getDistance(pickupLat, pickupLng, dropLat, dropLng);
-  let fare = 30 + (distance * 10);
-
-  document.getElementById("fare").innerText =
-    "Estimated Fare: ₹" + Math.round(fare);
+// FARE
+function calculateFare(){
+  if(!pickupLat||!dropLat) return;
+  let fare=30+(getDistance(pickupLat,pickupLng,dropLat,dropLng)*10);
+  document.getElementById("fare").innerText="Estimated Fare: ₹"+Math.round(fare);
 }
 
-// 🚀 MAP
-window.addEventListener("load", function () {
+// MAP
+window.addEventListener("load",()=>{
+  var map=L.map('map');
+  let dropMarker=null;
 
-  var map = L.map('map');
-  let dropMarker = null; // ✅ FIXED (only once)
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
-  // Tiles
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '© OpenStreetMap'
-  }).addTo(map);
+  navigator.geolocation.getCurrentPosition(pos=>{
+    pickupLat=pos.coords.latitude;
+    pickupLng=pos.coords.longitude;
 
-  // 🌍 Location
-  navigator.geolocation.getCurrentPosition(
-    (pos) => {
-      pickupLat = pos.coords.latitude;
-      pickupLng = pos.coords.longitude;
+    map.setView([pickupLat,pickupLng],15);
 
-      map.setView([pickupLat, pickupLng], 15);
+    L.marker([pickupLat,pickupLng]).addTo(map)
+      .bindPopup("You are here").openPopup();
+  });
 
-      L.marker([pickupLat, pickupLng]).addTo(map)
-        .bindPopup("📍 Your Location")
-        .openPopup();
-    },
-    () => {
-      alert("Allow location");
-      map.setView([28.6139, 77.2090], 10);
-    }
-  );
+  map.on('click',e=>{
+    dropLat=e.latlng.lat;
+    dropLng=e.latlng.lng;
 
-  // 📦 Drop click
-  map.on('click', function (e) {
+    if(dropMarker) map.removeLayer(dropMarker);
 
-    dropLat = e.latlng.lat;
-    dropLng = e.latlng.lng;
-
-    if (dropMarker) map.removeLayer(dropMarker);
-
-    dropMarker = L.marker([dropLat, dropLng]).addTo(map)
-      .bindPopup("📍 Drop Location")
-      .openPopup();
+    dropMarker=L.marker([dropLat,dropLng]).addTo(map);
 
     calculateFare();
   });
-
 });
 
-// Dummy function
-function bookRide() {
-  alert("Ride booked!");
-}
+// AUTH
+window.signup=async()=>{
+  await createUserWithEmailAndPassword(auth,email.value,password.value);
+  alert("Signup success");
+};
+
+window.login=async()=>{
+  await signInWithEmailAndPassword(auth,email.value,password.value);
+  alert("Login success");
+};
+
+// BOOK
+window.bookRide=async()=>{
+  if(!auth.currentUser) return alert("Login first");
+
+  await addDoc(collection(db,"rides"),{
+    pickup,drop,rideType,user:auth.currentUser.email
+  });
+
+  alert("Booked!");
+};
 </script>
 
 </body>

@@ -236,21 +236,34 @@ window.bookRide = async function () {
 };window.calculateFare = function () {
   ...
 };
-
-// 👇 PASTE KATHUA MAP CODE HERE
 window.onload = function () {
+
   var map = L.map('map').setView([32.3865, 75.5173], 10);
 
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: 'OpenStreetMap'
   }).addTo(map);
 
-  L.marker([32.5175, 75.8747]).addTo(map).bindPopup("Basohli");
-  L.marker([32.3865, 75.5173]).addTo(map).bindPopup("Kathua City");
-  L.marker([32.5750, 75.3130]).addTo(map).bindPopup("Hiranagar");
-  L.marker([32.3990, 75.5470]).addTo(map).bindPopup("Lakhanpur");
-  L.marker([32.4540, 75.2300]).addTo(map).bindPopup("Bani");
-  L.marker([32.6600, 75.1800]).addTo(map).bindPopup("Billawar");
+  // 📍 LIVE GPS LOCATION
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(function (position) {
+
+      let lat = position.coords.latitude;
+      let lng = position.coords.longitude;
+
+      map.setView([lat, lng], 15);
+
+      L.marker([lat, lng]).addTo(map)
+        .bindPopup("📍 You are here")
+        .openPopup();
+
+    }, function () {
+      alert("Location access denied");
+    });
+  }
+
 };
+
+ 
 </script></body>
 </html>

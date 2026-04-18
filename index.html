@@ -244,12 +244,12 @@ window.bookRide = async function () {
   document.getElementById("ridesList").innerHTML = html;
 };
 
- window.calculateFare = function () {
+function calculateFare() {
 
-  console.log("Fare triggered");
+  console.log("Calculating fare...");
 
-  if (pickupLat === null || dropLat === null) {
-    console.log("Missing coordinates");
+  if (!pickupLat || !dropLat) {
+    console.log("Missing pickup/drop");
     return;
   }
 
@@ -259,7 +259,9 @@ window.bookRide = async function () {
 
   document.getElementById("fare").innerText =
     "Estimated Fare: ₹" + Math.round(fare);
-};
+
+  console.log("Fare updated:", fare);
+}
 
 
 // 🚀 MAP LOAD
@@ -304,25 +306,29 @@ window.addEventListener("load", function () {
   }
 
   // 📦 CLICK → DROP LOCATION
-  map.on('click', function (e) {
+let dropMarker = null;
 
-    dropLat = e.latlng.lat;
-    dropLng = e.latlng.lng;
+map.on('click', function (e) {
 
-    // remove old marker
-    if (dropMarker) {
-      map.removeLayer(dropMarker);
-    }
+  dropLat = e.latlng.lat;
+  dropLng = e.latlng.lng;
 
-    // add new marker
-    dropMarker = L.marker([dropLat, dropLng]).addTo(map)
-      .bindPopup("📍 Drop Location")
-      .openPopup();
+  console.log("Drop set:", dropLat, dropLng);
 
+  // Remove old marker
+  if (dropMarker !== null) {
+    map.removeLayer(dropMarker);
+  }
+
+  // Add new marker
+  dropMarker = L.marker([dropLat, dropLng]).addTo(map)
+    .bindPopup("📍 Drop Location")
+    .openPopup();
+
+  // 🔥 FORCE fare calculation
+  setTimeout(() => {
     calculateFare();
-  });
-
+  }, 200);
 });
-</script>
 </script></body>
 </html>

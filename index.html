@@ -2,6 +2,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <title>Ridekaro - Premium</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
   <style>
@@ -52,6 +54,7 @@
   <p>Waiting Charges: ₹2/min</p>
 </div><section style="padding:40px 20px; text-align:center; background:#fff;">
   <h2>Book Your Ride</h2>
+  <div id="map" style="height:300px; width:100%; margin-bottom:15px;"></div>
   <form style="max-width:500px;margin:auto;display:flex;flex-direction:column;gap:15px;">
     
     <input type="text" id="pickup"oninput="calculateFare()" placeholder="Enter Pickup Location" required style="padding:12px;border-radius:8px;border:1px solid #ccc;">
@@ -230,6 +233,24 @@ window.bookRide = async function () {
 
   document.getElementById("fare").innerText =
     "Estimated Fare: ₹" + fare;
+};window.calculateFare = function () {
+  ...
+};
+
+// 👇 PASTE KATHUA MAP CODE HERE
+window.onload = function () {
+  var map = L.map('map').setView([32.3865, 75.5173], 10);
+
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: 'OpenStreetMap'
+  }).addTo(map);
+
+  L.marker([32.5175, 75.8747]).addTo(map).bindPopup("Basohli");
+  L.marker([32.3865, 75.5173]).addTo(map).bindPopup("Kathua City");
+  L.marker([32.5750, 75.3130]).addTo(map).bindPopup("Hiranagar");
+  L.marker([32.3990, 75.5470]).addTo(map).bindPopup("Lakhanpur");
+  L.marker([32.4540, 75.2300]).addTo(map).bindPopup("Bani");
+  L.marker([32.6600, 75.1800]).addTo(map).bindPopup("Billawar");
 };
 </script></body>
 </html>

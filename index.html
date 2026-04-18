@@ -58,6 +58,11 @@
 </div>
 
 <div id="ridesList"></div>
+  <h2 style="text-align:center;">Admin Panel</h2>
+<div id="adminRides" style="max-width:600px;margin:auto;"></div>
+
+<h2 style="text-align:center;">Rider Panel</h2>
+<div id="riderRides" style="max-width:600px;margin:auto;"></div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.0/firebase-app.js";
@@ -171,7 +176,9 @@ window.bookRide = async function () {
       drop: drop,
       rideType: rideType,
       user: auth.currentUser.email,
-      time: new Date()
+      time: new Date(),
+       status: "pending",
+  rider: null
     });
 
     alert("Ride booked successfully 🚗");

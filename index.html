@@ -127,8 +127,17 @@ src="https://www.google.com/maps?q=Kathua&output=embed">
     Calculate Fare
 </button>
 
-<p id="distance">Distance: Approx 0 km</p>
-<p id="fare">Estimated Fare: ₹0</p>
+<p id="distance">
+Distance: Please check total distance using Google Maps on your phone.
+Rider will also verify the distance in front of you.
+</p>
+
+<p id="fare">
+Fare: Rider will tell you final fare on WhatsApp after booking.
+<br><br>
+You can calculate estimated fare yourself:
+<b>Total Distance × ₹7 per km</b>
+</p>
 </div>
 
 <!-- RIDERS -->
@@ -325,47 +334,20 @@ function openDropMap() {
     emailjs.init("szp9VSLWIoqh_DW6P");
 })();
    function calculateFare() {
-    let pickup = document.getElementById("pickup").value.trim().toLowerCase();
-    let drop = document.getElementById("drop").value.trim().toLowerCase();
+    let pickup = document.getElementById("pickup").value;
+    let drop = document.getElementById("drop").value;
 
     if (!pickup || !drop) {
         alert("Please enter both Pickup and Drop locations");
         return;
     }
 
-    let distance = 5; // default distance
-
-    // Custom fixed routes for Kathua
-    if (
-        (pickup.includes("college road") && drop.includes("bus stand")) ||
-        (pickup.includes("bus stand") && drop.includes("college road"))
-    ) {
-        distance = 3;
-    }
-
-    else if (
-        (pickup.includes("hatli morh") && drop.includes("main market")) ||
-        (pickup.includes("main market") && drop.includes("hatli morh"))
-    ) {
-        distance = 2;
-    }
-
-    else if (
-        (pickup.includes("shaheedi chowk") && drop.includes("college road")) ||
-        (pickup.includes("college road") && drop.includes("shaheedi chowk"))
-    ) {
-        distance = 4;
-    }
-
-    let fare = 25 + (distance * 7);
-
     document.getElementById("distance").innerHTML =
-        "Distance: Approx " + distance + " km";
+        "Distance: Please check total distance using Google Maps on your phone.<br>Rider will also verify the distance in front of you.";
 
     document.getElementById("fare").innerHTML =
-        "Estimated Fare: ₹" + fare;
-}
-</script>
+        "Fare: Rider will tell you final fare on WhatsApp after booking.<br><br><b>You can calculate estimated fare yourself: Total Distance × ₹7 per km</b>";
+}</script>
 
 </body>
 </html>

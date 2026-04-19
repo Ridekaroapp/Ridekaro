@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html>
 <head>
@@ -16,7 +17,7 @@ body{font-family:sans-serif;margin:0;background:#fff;}
 .header h2{margin:5px;}
 .container{padding:20px;}
 input,button,select{padding:12px;margin:5px 0;width:100%;font-size:16px;}
-button{background:#f4c430;border:none;cursor:pointer;}
+button{background:#f4c430;border:none;cursor:pointer;font-weight:bold;}
 #map{height:300px;margin-top:10px;}
 </style>
 </head>
@@ -27,26 +28,22 @@ button{background:#f4c430;border:none;cursor:pointer;}
 <img src="logo.png">
 <h2>Ridekaro</h2>
 
-<a href="https://wa.me/917051768470">
-<button style="background:green;color:white;width:200px">
-Book on WhatsApp
+<p><b>Bike Taxi Service in Kathua</b></p>
+<p>Starting ₹30 | ₹10 per km</p>
+
+<a href="https://wa.me/917051768470?text=Hi%20RideKaro,%20I%20want%20to%20book%20a%20ride.%0APickup:%0ADrop:%0ATime:" target="_blank">
+<button style="background:green;color:white;width:250px;font-size:18px">
+🚀 Book Ride Instantly
 </button>
 </a>
 </div>
 
 <div class="container">
-<h3>Login / Signup</h3>
-<input id="email" placeholder="Email">
-<input id="password" type="password" placeholder="Password">
-<button onclick="signup()">Signup</button>
-<button onclick="login()">Login</button>
-</div>
-
-<div class="container">
 <h3>Book Ride</h3>
 <div id="map"></div>
-<input id="pickup" placeholder="Pickup">
-<input id="drop" placeholder="Drop">
+
+<input id="pickup" placeholder="Pickup location">
+<input id="drop" placeholder="Drop location">
 
 <select id="rideType">
 <option>Bike Taxi</option>
@@ -59,7 +56,24 @@ Book on WhatsApp
 </div>
 
 <div class="container">
-<div id="ridesList"></div>
+<h3>How It Works</h3>
+<p>1. Enter pickup & drop</p>
+<p>2. See fare instantly</p>
+<p>3. Confirm on WhatsApp</p>
+<p>4. Rider arrives 🚀</p>
+</div>
+
+<div class="container">
+<h3>Why Choose RideKaro?</h3>
+<p>✔ Verified Local Rider</p>
+<p>✔ Safe & Affordable</p>
+<p>✔ Fast Pickup in Kathua</p>
+<p>✔ Easy WhatsApp Booking</p>
+</div>
+
+<div class="container">
+<h3>Service Area</h3>
+<p>Kathua - College Road, Bus Stand, Main Market</p>
 </div>
 
 <!-- Firebase -->
@@ -67,7 +81,7 @@ Book on WhatsApp
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 
-<!-- ✅ ADDED: EmailJS -->
+<!-- EmailJS -->
 <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
 
 <script>
@@ -82,8 +96,6 @@ appId: "1:805660027682:web:0117b81f4ec8d341e5d37b"
 };
 
 firebase.initializeApp(firebaseConfig);
-
-const auth = firebase.auth();
 const db = firebase.firestore();
 
 let pickupLat,pickupLng,dropLat,dropLng;
@@ -135,55 +147,46 @@ document.getElementById("fare").innerHTML =
 "Estimated Fare: ₹"+Math.round(fare);
 }
 
-function signup(){
-auth.createUserWithEmailAndPassword(email.value,password.value)
-.then(()=>alert("Signup success"))
-.catch(e=>alert(e.message));
-}
-
-function login(){
-auth.signInWithEmailAndPassword(email.value,password.value)
-.then(()=>{
-alert("Login success");
-loadRides();
-})
-.catch(e=>alert(e.message));
-}
-
 function bookRide(){
 
-if(!auth.currentUser){
-alert("Login first");
+if(!pickup.value || !drop.value){
+alert("Please enter pickup and drop");
 return;
 }
+
+let fareText = document.getElementById("fare").innerText;
 
 db.collection("rides").add({
 pickup:pickup.value,
 drop:drop.value,
-user:auth.currentUser.email,
-fare:document.getElementById("fare").innerText,
+fare:fareText,
 time:new Date()
 })
 .then(()=>{
+
 alert("Ride Booked");
 
-<!-- ✅ ADDED EMAIL CALL -->
+// WhatsApp Auto Open
+let msg = `Hi RideKaro, I want to confirm my ride.
+Pickup: ${pickup.value}
+Drop: ${drop.value}
+Fare: ${fareText}`;
+
+window.open(`https://wa.me/917051768470?text=${encodeURIComponent(msg)}`, "_blank");
+
+// Email
 sendEmail({
 pickup:pickup.value,
 drop:drop.value,
-user:auth.currentUser.email,
-fare:document.getElementById("fare").innerText
+fare:fareText
 });
 
-loadRides();
 });
 
 }
 
-<!-- ✅ ADDED EMAIL FUNCTION -->
 function sendEmail(data){
 emailjs.send("service_a20rsus","template_xot7epe",{
-user: data.user,
 pickup: data.pickup,
 drop: data.drop,
 fare: data.fare
@@ -192,36 +195,13 @@ fare: data.fare
 .catch(e=>console.log(e));
 }
 
-<!-- ✅ ADDED INIT -->
 (function(){
 emailjs.init("szp9VSLWIoqh_DW6P");
 })();
-
-function loadRides(){
-
-db.collection("rides")
-.where("user","==",auth.currentUser.email)
-.get()
-.then(snap=>{
-
-let html="";
-
-snap.forEach(doc=>{
-let d=doc.data();
-
-html += `<div>
-🚗 ${d.pickup} → ${d.drop} <br>
-💰 ${d.fare}
-</div><hr>`;
-});
-
-ridesList.innerHTML = html;
-
-});
-
-}
 
 </script>
 
 </body>
 </html>
+```
+

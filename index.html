@@ -31,9 +31,9 @@ img{width:100%;margin-top:10px;border-radius:10px;}
 <p><b>Bike Taxi Service in Kathua</b></p>
 <p>Starting ₹25 | ₹7 per km</p>
 <p><b>⚡ Pickup in 10–15 minutes</b></p>
-<p><b>Head Office: Shaheedi Chowk, Kathua</b></p>
+<p><b>Head Office Address: Shaheedi Chowk, Kathua</b></p>
 
-<a href="https://wa.me/917051768470" target="_blank">
+<a href="https://wa.me/917051768470?text=Hi%20RideKaro,%20I%20want%20to%20book%20a%20ride.%0APickup:%0ADrop:%0ATime:" target="_blank">
 <button style="background:green;color:white;width:250px;font-size:18px">
 🚀 Book Ride Instantly
 </button>
@@ -44,12 +44,10 @@ img{width:100%;margin-top:10px;border-radius:10px;}
 📞 Call for Instant Ride
 </button>
 </a>
-
 </div>
 
 <div class="container">
 <h3>Book Ride</h3>
-
 <p><b>👉 Tap on map OR type location</b></p>
 
 <div id="map"></div>
@@ -68,7 +66,7 @@ img{width:100%;margin-top:10px;border-radius:10px;}
 <p id="distance">Distance: 0 km</p>
 </div>
 
-<!-- ✅ RIDERS -->
+<!-- RIDERS -->
 <div class="container">
 <h3>Riders Available</h3>
 
@@ -89,7 +87,6 @@ img{width:100%;margin-top:10px;border-radius:10px;}
 
 <img src="rider2_1.jpg">
 <img src="rider2_2.jpg">
-
 </div>
 
 <div class="container">
@@ -110,16 +107,20 @@ img{width:100%;margin-top:10px;border-radius:10px;}
 
 <div class="container">
 <h3>Service Area</h3>
-<p>Kathua - College Road, Hatli Morh, Ward 6, Main Market, Bus Stand</p>
+<p>Kathua - College Road, Hatli Morh, Main Market, Bus Stand</p>
 </div>
 
-<!-- GOOGLE API -->
+<!-- GOOGLE PLACES -->
 <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&libraries=places"></script>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 
+<script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
+
 <script>
+
 const firebaseConfig = {
 apiKey: "AIzaSyDq8djWCKZCx9a0evT8n85vYZt8srcxH8o",
 authDomain: "ridekaro-2237b.firebaseapp.com",
@@ -135,15 +136,14 @@ let bikeMarkers = [];
 
 const map = L.map('map').setView([32.3861,75.5170], 13);
 
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png')
-.addTo(map);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
-// 📍 CURRENT LOCATION
+// LOCATION
 navigator.geolocation.getCurrentPosition(pos=>{
 pickupLat=pos.coords.latitude;
 pickupLng=pos.coords.longitude;
 
-document.getElementById("pickup").value = "Current Location";
+document.getElementById("pickup").value="Current Location";
 
 map.setView([pickupLat,pickupLng],15);
 L.marker([pickupLat,pickupLng]).addTo(map);
@@ -151,47 +151,43 @@ L.marker([pickupLat,pickupLng]).addTo(map);
 showNearbyBikes();
 });
 
-// 🗺️ CLICK DROP
+// MAP CLICK
 map.on('click',e=>{
 dropLat=e.latlng.lat;
 dropLng=e.latlng.lng;
 
 if(dropMarker) map.removeLayer(dropMarker);
 
-dropMarker = L.marker([dropLat,dropLng]).addTo(map);
+dropMarker=L.marker([dropLat,dropLng]).addTo(map);
 
 drawRoute();
 calculateFare();
 });
 
-// 🔥 GOOGLE AUTOCOMPLETE WITH KATHUA BIAS
-window.onload = function(){
+// GOOGLE AUTOCOMPLETE (KATHUA)
+window.onload=function(){
 
-let kathuaBounds = new google.maps.LatLngBounds(
+let bounds=new google.maps.LatLngBounds(
 new google.maps.LatLng(32.35,75.48),
 new google.maps.LatLng(32.42,75.55)
 );
 
-let dropAuto = new google.maps.places.Autocomplete(
+let auto=new google.maps.places.Autocomplete(
 document.getElementById("drop"),
-{
-bounds: kathuaBounds,
-componentRestrictions: { country: "in" },
-strictBounds: false
-}
+{bounds:bounds,componentRestrictions:{country:"in"}}
 );
 
-dropAuto.addListener("place_changed", function(){
+auto.addListener("place_changed",function(){
 
-let place = dropAuto.getPlace();
+let place=auto.getPlace();
 if(!place.geometry) return;
 
-dropLat = place.geometry.location.lat();
-dropLng = place.geometry.location.lng();
+dropLat=place.geometry.location.lat();
+dropLng=place.geometry.location.lng();
 
 if(dropMarker) map.removeLayer(dropMarker);
 
-dropMarker = L.marker([dropLat,dropLng]).addTo(map);
+dropMarker=L.marker([dropLat,dropLng]).addTo(map);
 
 map.setView([dropLat,dropLng],15);
 
@@ -202,84 +198,105 @@ calculateFare();
 
 };
 
+// ROUTE
 function drawRoute(){
-if(!pickupLat || !dropLat) return;
+if(!pickupLat||!dropLat) return;
 
 if(routeLine) map.removeLayer(routeLine);
 
-routeLine = L.polyline([
-[pickupLat,pickupLng],
-[dropLat,dropLng]
-],{color:'blue'}).addTo(map);
+routeLine=L.polyline([[pickupLat,pickupLng],[dropLat,dropLng]],{color:'blue'}).addTo(map);
 
 map.fitBounds(routeLine.getBounds());
 }
 
+// BIKES
 function showNearbyBikes(){
-if(!pickupLat) return;
-
-bikeMarkers.forEach(b => map.removeLayer(b));
+bikeMarkers.forEach(b=>map.removeLayer(b));
 bikeMarkers=[];
-
 for(let i=0;i<3;i++){
-let lat = pickupLat+(Math.random()-0.5)/500;
-let lng = pickupLng+(Math.random()-0.5)/500;
-
-bikeMarkers.push(
-L.marker([lat,lng]).addTo(map)
-.bindPopup("🚲 RideKaro Bike Nearby")
-);
+let lat=pickupLat+(Math.random()-0.5)/500;
+let lng=pickupLng+(Math.random()-0.5)/500;
+bikeMarkers.push(L.marker([lat,lng]).addTo(map));
 }
 }
 
+// DISTANCE
 function getDistance(a,b,c,d){
 const R=6371;
 const dLat=(c-a)*Math.PI/180;
 const dLon=(d-b)*Math.PI/180;
-
 const x=Math.sin(dLat/2)**2+
 Math.cos(a*Math.PI/180)*
 Math.cos(c*Math.PI/180)*
 Math.sin(dLon/2)**2;
-
 return R*(2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x)));
 }
 
+// FARE
 function calculateFare(){
-if(!pickupLat || !dropLat) return;
-
-let distance = getDistance(pickupLat,pickupLng,dropLat,dropLng);
-
-document.getElementById("distance").innerHTML =
-"Distance: "+distance.toFixed(2)+" km";
-
-let fare = 25 + distance*7;
-
-document.getElementById("fare").innerHTML =
-"Estimated Fare: ₹"+Math.round(fare);
+if(!pickupLat||!dropLat) return;
+let d=getDistance(pickupLat,pickupLng,dropLat,dropLng);
+document.getElementById("distance").innerHTML="Distance: "+d.toFixed(2)+" km";
+document.getElementById("fare").innerHTML="Estimated Fare: ₹"+Math.round(25+d*7);
 }
 
+// BOOK
 function bookRide(){
 
-if(!pickupLat || !dropLat){
+if(!pickupLat||!dropLat){
 alert("Select pickup & drop");
 return;
 }
 
-let msg = `Pickup: ${pickup.value}
-Drop: ${drop.value}`;
+let fareText=document.getElementById("fare").innerText;
+let distanceText=document.getElementById("distance").innerText;
 
-window.open(`https://wa.me/917051768470?text=${encodeURIComponent(msg)}`);
+let pickupLink=`https://www.google.com/maps?q=${pickupLat},${pickupLng}`;
+let dropLink=`https://www.google.com/maps?q=${dropLat},${dropLng}`;
 
 db.collection("rides").add({
 pickup:pickup.value,
 drop:drop.value,
+fare:fareText,
+distance:distanceText,
 time:new Date()
+})
+.then(()=>{
+
+let msg=`Hi RideKaro, I want to confirm my ride.
+Pickup: ${pickup.value}
+📍 ${pickupLink}
+Drop: ${drop.value}
+📍 ${dropLink}
+${distanceText}
+${fareText}`;
+
+window.open(`https://wa.me/917051768470?text=${encodeURIComponent(msg)}`);
+
+sendEmail({
+pickup:pickup.value,
+drop:drop.value,
+fare:fareText
 });
 
-alert("Ride Booked!");
+alert("Ride Booked");
+
+});
 
 }
+
+// EMAIL
+function sendEmail(data){
+emailjs.send("service_a20rsus","template_xot7epe",{
+pickup:data.pickup,
+drop:data.drop,
+fare:data.fare
+});
+}
+
+(function(){
+emailjs.init("szp9VSLWIoqh_DW6P");
+})();
 
 </script>
 

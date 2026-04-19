@@ -333,8 +333,29 @@ function openDropMap() {
         return;
     }
 
-    // Fixed distance logic based on text length difference
-    let distance = Math.abs(pickup.length - drop.length) + 3;
+    let distance = 5; // default distance
+
+    // Custom fixed routes for Kathua
+    if (
+        (pickup.includes("college road") && drop.includes("bus stand")) ||
+        (pickup.includes("bus stand") && drop.includes("college road"))
+    ) {
+        distance = 3;
+    }
+
+    else if (
+        (pickup.includes("hatli morh") && drop.includes("main market")) ||
+        (pickup.includes("main market") && drop.includes("hatli morh"))
+    ) {
+        distance = 2;
+    }
+
+    else if (
+        (pickup.includes("shaheedi chowk") && drop.includes("college road")) ||
+        (pickup.includes("college road") && drop.includes("shaheedi chowk"))
+    ) {
+        distance = 4;
+    }
 
     let fare = 25 + (distance * 7);
 

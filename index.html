@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html>
 <head>
@@ -30,7 +31,6 @@ button{background:#f4c430;border:none;cursor:pointer;font-weight:bold;}
 <p><b>Bike Taxi Service in Kathua</b></p>
 <p>Starting ₹30 | ₹10 per km</p>
 
-<!-- ✅ ADDED: Fast Pickup -->
 <p><b>⚡ Pickup in 10–15 minutes</b></p>
 
 <a href="https://wa.me/917051768470?text=Hi%20RideKaro,%20I%20want%20to%20book%20a%20ride.%0APickup:%0ADrop:%0ATime:" target="_blank">
@@ -39,7 +39,6 @@ button{background:#f4c430;border:none;cursor:pointer;font-weight:bold;}
 </button>
 </a>
 
-<!-- ✅ ADDED: Call Button -->
 <a href="tel:7051768470">
 <button style="background:black;color:white;width:250px;font-size:18px">
 📞 Call for Instant Ride
@@ -119,7 +118,6 @@ navigator.geolocation.getCurrentPosition(pos=>{
 pickupLat=pos.coords.latitude;
 pickupLng=pos.coords.longitude;
 
-/* ✅ ADDED: Auto-fill pickup */
 document.getElementById("pickup").value = "Current Location";
 
 map.setView([pickupLat,pickupLng],15);
@@ -170,6 +168,10 @@ return;
 
 let fareText = document.getElementById("fare").innerText;
 
+/* ✅ ADDED: LOCATION LINKS */
+let pickupLink = pickupLat ? `https://www.google.com/maps?q=${pickupLat},${pickupLng}` : "Not available";
+let dropLink = dropLat ? `https://www.google.com/maps?q=${dropLat},${dropLng}` : "Not selected";
+
 db.collection("rides").add({
 pickup:pickup.value,
 drop:drop.value,
@@ -180,15 +182,15 @@ time:new Date()
 
 alert("Ride Booked");
 
-// WhatsApp Auto Open
 let msg = `Hi RideKaro, I want to confirm my ride.
 Pickup: ${pickup.value}
+📍 Pickup Location: ${pickupLink}
 Drop: ${drop.value}
+📍 Drop Location: ${dropLink}
 Fare: ${fareText}`;
 
 window.open(`https://wa.me/917051768470?text=${encodeURIComponent(msg)}`, "_blank");
 
-// Email
 sendEmail({
 pickup:pickup.value,
 drop:drop.value,
@@ -218,5 +220,6 @@ emailjs.init("szp9VSLWIoqh_DW6P");
 </body>
 </html>
 ```
+
 
 

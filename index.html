@@ -31,11 +31,22 @@ button{background:#f4c430;border:none;cursor:pointer;font-weight:bold;}
 <p><b>Bike Taxi Service in Kathua</b></p>
 <p>Starting ₹30 | ₹10 per km</p>
 
+<!-- ✅ ADDED: Fast Pickup -->
+<p><b>⚡ Pickup in 10–15 minutes</b></p>
+
 <a href="https://wa.me/917051768470?text=Hi%20RideKaro,%20I%20want%20to%20book%20a%20ride.%0APickup:%0ADrop:%0ATime:" target="_blank">
 <button style="background:green;color:white;width:250px;font-size:18px">
 🚀 Book Ride Instantly
 </button>
 </a>
+
+<!-- ✅ ADDED: Call Button -->
+<a href="tel:7051768470">
+<button style="background:black;color:white;width:250px;font-size:18px">
+📞 Call for Instant Ride
+</button>
+</a>
+
 </div>
 
 <div class="container">
@@ -108,6 +119,10 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png')
 navigator.geolocation.getCurrentPosition(pos=>{
 pickupLat=pos.coords.latitude;
 pickupLng=pos.coords.longitude;
+
+/* ✅ ADDED: Auto-fill pickup */
+document.getElementById("pickup").value = "Current Location";
+
 map.setView([pickupLat,pickupLng],15);
 L.marker([pickupLat,pickupLng]).addTo(map);
 });
@@ -204,4 +219,5 @@ emailjs.init("szp9VSLWIoqh_DW6P");
 </body>
 </html>
 ```
+
 

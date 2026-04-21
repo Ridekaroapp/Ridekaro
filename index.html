@@ -3,8 +3,6 @@
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-
-
 <title>Ridekaro</title>
 <link rel="icon" href="logo.png">
 
@@ -50,8 +48,6 @@ button{
     font-weight:bold;
 }
 
-
-   
 #googleMapFrame{
     width:100%;
     height:400px;
@@ -100,6 +96,11 @@ img{
     <h3>Book Ride</h3>
     <p><b>👉 Tap on map OR type location</b></p>
 
+    <!-- NEW ATTRACTIVE LINE ADDED -->
+    <p style="background:#fff8d6; padding:12px; border-radius:10px; font-weight:bold; line-height:1.6;">
+        🚖 Pickup Charge Notice: If your rider travels up to 10 KM to reach your pickup location, a fixed pickup charge of ₹40 will apply. After pickup, your ride fare is calculated at just ₹9 per KM for safe and affordable travel.
+    </p>
+
 <iframe
 id="googleMapFrame"
 width="100%"
@@ -111,18 +112,20 @@ referrerpolicy="no-referrer-when-downgrade"
 src="https://www.google.com/maps?q=Kathua&output=embed">
 </iframe>
 
-    <input id="pickup" placeholder="Pickup location">
+<input id="pickup" placeholder="Pickup location">
 <button onclick="openPickupMap()">📍 View Pickup on Map</button>
 
 <input id="drop" placeholder="Drop location">
 <button onclick="openDropMap()">📍 View Drop on Map</button>
-    <select id="rideType">
-        <option>Bike Taxi</option>
-        <option>Parcel Delivery</option>
-        <option>Local Ride</option>
-    </select>
 
-    <button onclick="bookRide()">Confirm Booking</button>
+<select id="rideType">
+    <option>Bike Taxi</option>
+    <option>Parcel Delivery</option>
+    <option>Local Ride</option>
+</select>
+
+<button onclick="bookRide()">Confirm Booking</button>
+
 <button type="button" onclick="calculateFare()">
     Calculate Fare
 </button>
@@ -221,19 +224,6 @@ const db = firebase.firestore();
 
 let bikeMarkers = [];
 
-
-
-
-   /* =========================
-   REAL ROAD ROUTE
-========================= */
-
-
-/* =========================
-   RED RIDER MARKERS
-========================= */
-
-
 /* =========================
    BOOK RIDE
 ========================= */
@@ -253,10 +243,10 @@ function bookRide(){
     let fareText = document.getElementById("fare").innerText;
     let distanceText = document.getElementById("distance").innerText;
 
-  let pickupLink =
+    let pickupLink =
 `https://www.google.com/maps/search/${encodeURIComponent(pickupText + ", Kathua")}`;
 
-let dropLink =
+    let dropLink =
 `https://www.google.com/maps/search/${encodeURIComponent(dropText + ", Kathua")}`;
 
     db.collection("rides").add({
@@ -310,6 +300,7 @@ function sendEmail(data){
         }
     );
 }
+
 function openPickupMap() {
     let pickup = document.getElementById("pickup").value;
 
@@ -323,6 +314,7 @@ function openPickupMap() {
         encodeURIComponent(pickup + ", Kathua") +
         "&output=embed";
 }
+
 function openDropMap() {
     let drop = document.getElementById("drop").value;
 
@@ -336,10 +328,12 @@ function openDropMap() {
         encodeURIComponent(drop + ", Kathua") +
         "&output=embed";
 }
+
 (function(){
     emailjs.init("szp9VSLWIoqh_DW6P");
 })();
-    function calculateFare() {
+
+function calculateFare() {
     let pickup = document.getElementById("pickup").value;
     let drop = document.getElementById("drop").value;
 
@@ -354,9 +348,8 @@ function openDropMap() {
     document.getElementById("fare").innerHTML =
         "Fare Formula: <b>Total KM Distance × ₹7 + ₹25 (Platform Fees)</b><br><br>Rider will tell you final fare on WhatsApp once you book the ride.<br><br>You can also calculate your estimated fare by yourself using the above formula.";
 }
-  
+
 </script>
 
 </body>
 </html>
-```

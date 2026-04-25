@@ -1,1 +1,21 @@
-
+{
+  "name": "Ridekaro",
+  "short_name": "Ridekaro",
+  "start_url": "/Ridekaro/",
+  "display": "standalone",
+  "background_color": "#f4c430",
+  "theme_color": "#f4c430",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "logo.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "logo.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

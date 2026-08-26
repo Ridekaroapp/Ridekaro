@@ -88,8 +88,8 @@ img{
 
     <p><b>Head Office Address: Shaheedi Chowk, Kathua</b></p>
 
-    <!-- WHATSAPP GROUP BUTTON -->
-    <a href="https://chat.whatsapp.com/J44bBc1JL4oDOQpk1zilNt?mode=gi_t" target="_blank">
+    <!-- WHATSAPP DIRECT BUTTON -->
+    <a href="https://wa.me/917051768470" target="_blank">
 
         <button style="background:green;color:white;width:250px;font-size:18px;">
 
@@ -246,8 +246,8 @@ img{
 
     <p>1. Enter pickup & drop</p>
     <p>2. Confirm booking</p>
-    <p>3. WhatsApp group opens</p>
-    <p>4. Rider contacts you 🚀</p>
+    <p>3. WhatsApp opens directly</p>
+    <p>4. RideKaro receives your booking 🚀</p>
 
 </div>
 
@@ -284,6 +284,9 @@ function bookRide(){
     let phone =
     document.getElementById("customerPhone").value;
 
+    let rideType =
+    document.getElementById("rideType").value;
+
     if(!pickup || !drop || !phone){
 
         alert("Please fill all details");
@@ -296,8 +299,7 @@ function bookRide(){
         customerPhone: phone,
         pickup: pickup,
         drop: drop,
-        rideType:
-        document.getElementById("rideType").value,
+        rideType: rideType,
         time: new Date()
 
     })
@@ -305,12 +307,26 @@ function bookRide(){
     .then(function(){
 
         alert(
-        "Booking Submitted Successfully.\n\nRideKaro WhatsApp Group will open now."
+        "Booking Submitted Successfully.\n\nWhatsApp will open now."
         );
 
-        // OPEN WHATSAPP GROUP
+        // CREATE WHATSAPP MESSAGE
+        let message =
+        "🚖 *NEW RIDE BOOKING - RIDEKARO*%0A%0A" +
+
+        "📞 *Customer Phone:* " + phone + "%0A" +
+
+        "📍 *Pickup:* " + pickup + "%0A" +
+
+        "🏁 *Drop:* " + drop + "%0A" +
+
+        "🚲 *Ride Type:* " + rideType + "%0A%0A" +
+
+        "Please contact the customer for the ride.";
+
+        // OPEN WHATSAPP DIRECTLY TO 7051768470
         window.open(
-        "https://chat.whatsapp.com/J44bBc1JL4oDOQpk1zilNt?mode=gi_t",
+        "https://wa.me/917051768470?text=" + message,
         "_blank"
         );
 
@@ -393,7 +409,7 @@ function calculateFare(){
 <!-- SERVICE WORKER -->
 <script>
 
-if ('serviceWorker' in navigator') {
+if ('serviceWorker' in navigator) {
 
     navigator.serviceWorker.register('service-worker.js')
     .then(() => console.log('Service Worker Registered'));
